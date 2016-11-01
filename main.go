@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/hoisie/mustache"
 	"github.com/rwcarlsen/goexif/exif"
+	flag "github.com/spf13/pflag"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -25,19 +25,21 @@ import (
 )
 
 const (
-	Version         = "1.0.0"
-	Build           = "2016-11-01T22:11:00+1100"
 	LocalDateLayout = "2006-01-02 15:04:05"
 	TzDateLayout    = "2006-01-02T15:04:05-0700"
 )
 
 var (
+	Version string
+	Build   string
 	// Img = regexp.MustCompile(`(?i).(jpe?g|png|gif)`)
 	Img         = regexp.MustCompile(`(?i).(jpe?g)`)
 	Vid         = regexp.MustCompile(`(?i).(mov|mp4|m4v)`)
 	SkipFile    = errors.New("skip this file")
 	NoPath      = errors.New("no path")
 	UnknownFile = errors.New("unknown file")
+	flagHelp    bool
+	flagVersion bool
 )
 
 type FlagType int
@@ -305,14 +307,36 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 	return files, err
 }
 
+var Usage = func() {
+	fmt.Fprintf(os.Stderr, "usage: %s [options] <path>\n", path.Base(os.Args[0]))
+	flag.PrintDefaults()
+}
+
+func init() {
+	flag.Usage = Usage
+	flag.BoolVarP(&flagHelp, "help", "h", false, "print help and exit")
+	flag.BoolVarP(&flagVersion, "version", "v", false, "print version and exit")
+}
+
 func main() {
 	flag.Parse()
+
+	if flagHelp {
+		Usage()
+		os.Exit(0)
+	}
+
+	if flagVersion {
+		fmt.Printf("Version: %s\nCommit: %s", Version, Build)
+		os.Exit(0)
+	}
 
 	root := flag.Arg(0)
 	//root = "/Users/avioli/Pictures/Photos Library.photoslibrary/Masters/2016/10/"
 	if root == "" {
-		fmt.Fprintf(os.Stderr, "usage: %s <path>\n", path.Base(os.Args[0]))
-		os.Exit(1)
+		fmt.Fprintln(os.Stderr, "No path specified")
+		Usage()
+		os.Exit(2)
 	}
 
 	cwd, err := os.Getwd()
