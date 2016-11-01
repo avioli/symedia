@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<style>
+body { margin: 0; background: #333; }
+.section-body { 
+  padding: .5vw;
+  font-size: 0;
+  display: -ms-flexbox;
+  -ms-flex-wrap: wrap;
+  -ms-flex-direction: column;
+  -webkit-flex-flow: row wrap; 
+  flex-flow: row wrap; 
+  display: -webkit-box;
+  display: flex;
+}
+.section-body .image { 
+  -webkit-box-flex: auto;
+  -ms-flex: auto;
+  flex: auto; 
+  width: 200px; 
+  margin: .5vw; 
+}
+.section-body .image--aae { 
+  display: none;
+}
+.section-body .image img { 
+  width: 100%; 
+  height: auto; 
+}
+h1 {
+  color: white;
+}
+@media screen and (max-width: 400px) {
+  .section-body .image { margin: 0; }
+  .section-body { padding: 0; }
+}
+</style>
+</head>
+<body>
+	<section>
+		<header><h1>Unknown, Skipped or Errored</h1></header>
+		<div class="section-body">
+{{#Files}}{{#Flag.IsLoggable}}
+			<div class="image image--{{Ext}}"><img src="file://{{Origin}}" title="{{Flag}}" alt="{{Name}}" /></div>
+{{/Flag.IsLoggable}}{{/Files}}
+		</div>
+	</section>
+</body>
+</html>
