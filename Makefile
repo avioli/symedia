@@ -17,7 +17,7 @@ ${BINARY}_darwin_386: ${SOURCES}
 	GOOS=darwin GOARCH=386 build go build ${LDFLAGS} -o ${BINARY}_darwin_386 ${SOURCEDIR}
 
 install:
-	go install ${LDFLAGS} -o ${BINARY} ${SOURCEDIR}
+	go install ${LDFLAGS} ${SOURCEDIR}
 
 clean:
 	test -f ${BINARY} && rm ${BINARY}
