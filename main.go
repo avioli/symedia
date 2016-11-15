@@ -385,7 +385,7 @@ Mustache Template Data:
 	// create outDir
 	var outDir string
 	if str, ok := args["OUTPUT_DIR"].(string); ok {
-		outDir = path.Join(cwd, str)
+		outDir = str
 	} else {
 		outDir = path.Join(cwd, "output")
 	}
