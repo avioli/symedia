@@ -112,7 +112,7 @@ type Ffprobe struct {
 }
 
 func writeJSON(files Files, jsonFile string) error {
-	jsonBytes, err := json.Marshal(files)
+	jsonBytes, err := json.MarshalIndent(files, "", "\t")
 	if err != nil {
 		return fmt.Errorf("Cannot convert files data to json.\n%s", err.Error())
 	}
