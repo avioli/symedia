@@ -13,7 +13,7 @@ import (
 	_ "image/png"
 	"io"
 	"io/ioutil"
-	"log"
+	// "log"
 	"os"
 	"os/exec"
 	"path"
@@ -341,13 +341,15 @@ func main() {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Cannot get current working directory")
+		os.Exit(1)
 	}
 
 	// create outDir
 	outDir := path.Join(cwd, "output")
 	if err = os.MkdirAll(outDir, os.ModePerm); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Cannot create output directory: %s", outDir)
+		os.Exit(1)
 	}
 
 	// walk the directory
@@ -367,13 +369,15 @@ func main() {
 	// output json
 	jsonBytes, err := json.Marshal(files)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Cannot convert files data to json.\n%s", err.Error())
+		os.Exit(1)
 	}
 	//os.Stdout.Write(jsonBytes)
 
 	jsonOut := path.Join(outDir, "files.json")
 	if err = ioutil.WriteFile(jsonOut, jsonBytes, 0644); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Cannot write json: %s\n%s", jsonOut, err.Error())
+		os.Exit(1)
 	}
 
 	// output templates
@@ -385,6 +389,7 @@ func main() {
 	}
 	rendered := mustache.RenderFile(templatePath, data)
 	if err = ioutil.WriteFile(templateOut, []byte(rendered), 0644); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, "Cannot render or write errored files: %s.\n%s", templatePath, err.Error())
+		os.Exit(1)
 	}
 }
