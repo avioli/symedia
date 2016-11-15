@@ -317,14 +317,14 @@ At the end, it writes a JSON file with the gathered metadata and parses a Mustac
 
 Arguments:
   PATH        the path to process
-  OUTPUT_DIR  an optional output path (Defaults to "output")
+  OUTPUT_DIR  an optional output path [Defaults to "output"]
 
 Options:
   -h, --help            print this help, then exit
   --version             print version and build, then exit
-  --template_path FILE  define a custom template path (Defaults to "error-template.html" in cwd or with the executable)
-  --template_out FILE   define a path for the template output (Defaults to "OUTPUT_DIR/errors.html")
-  --json FILE           define a path for the JSON output (Defaults to "OUTPUT_DIR/files.json")
+  --template_path FILE  define a custom template path [Defaults to "error-template.html" in cwd or with the executable]
+  --template_out FILE   define a path for the template output [Defaults to "OUTPUT_DIR/errors.html"]
+  --json FILE           define a path for the JSON output [Defaults to "OUTPUT_DIR/files.json"]
 
 Mustache Template Data:
   { "OutDir" string,
