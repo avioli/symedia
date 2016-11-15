@@ -382,6 +382,15 @@ func main() {
 
 	// output templates
 	templatePath := path.Join(cwd, "error-template.html")
+	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+		execDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Cannot get current executable path.\n%s", err.Error())
+			os.Exit(1)
+		}
+		templatePath = path.Join(execDir, "error-template.html")
+	}
+
 	templateOut := path.Join(outDir, "errors.html")
 	data := map[string]interface{}{
 		"OutDir": outDir,
