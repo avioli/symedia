@@ -26,4 +26,6 @@ clean:
 
 32bit: ${BINARY}_darwin_386
 
+all: ${BINARY} ${BINARY}_darwin_386
+
 .PHONY: clean install 32bit
