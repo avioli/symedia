@@ -12,10 +12,10 @@ LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.Build=$(BUILD)"
 
 .DEFAULT_GOAL: ${BINARY}
 
-${BINARY}: ${SOURCES}
+${BINARY}: ${SOURCES} version
 	$(GO) build $(LDFLAGS) -o ${BINARY} ${SOURCEDIR}
 
-${BINARY}_darwin_386: ${SOURCES}
+${BINARY}_darwin_386: ${SOURCES} version
 	env GOOS=darwin GOARCH=386 $(GO) build $(LDFLAGS) -o ${BINARY}_darwin_386 ${SOURCEDIR}
 
 install:
