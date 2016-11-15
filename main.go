@@ -277,7 +277,7 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 			return nil
 		} else if err != nil {
 			file.Flag = FlagError
-			return err
+			return nil
 		}
 
 		if newPath == "" {
