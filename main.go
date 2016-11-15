@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/docopt/docopt-go"
 	"github.com/hoisie/mustache"
+	"github.com/kardianos/osext"
 	"github.com/rwcarlsen/goexif/exif"
 	"image"
 	_ "image/gif"
@@ -414,7 +415,7 @@ Mustache Template Data:
 	} else {
 		templatePath = path.Join(cwd, "error-template.html")
 		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-			execDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+			execDir, err := osext.ExecutableFolder()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Cannot get current executable path.\n%s\n", err.Error())
 				os.Exit(1)
