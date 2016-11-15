@@ -413,7 +413,7 @@ Mustache Template Data:
 	}
 
 	var templateOut string
-	if str, ok := args["--template_path"].(string); ok {
+	if str, ok := args["--template_out"].(string); ok {
 		templateOut = str
 	} else {
 		templateOut = path.Join(outDir, "errors.html")
