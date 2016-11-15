@@ -305,6 +305,23 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 	return files, err
 }
 
+func getRoot(args map[string]interface{}, fallbackToCwd bool) (root string, err error) {
+	root, ok := args["PATH"].(string)
+	if !ok || root == "" {
+		if fallbackToCwd {
+			root, err = os.Getwd()
+			return
+		}
+		err = fmt.Errorf("No PATH specified")
+		return
+	}
+
+	if _, err = os.Stat(root); os.IsNotExist(err) {
+		err = fmt.Errorf("PATH does not exist: %s", root)
+	}
+	return
+}
+
 func cmdProcess(argv []string) (err error) {
 	usage := fmt.Sprint(`Usage: `, AppName, ` process PATH [OUTPUT_DIR]
        `, AppName, ` process [--template_path FILE] [--template_out FILE] [--json FILE] PATH [OUTPUT_DIR]
@@ -342,13 +359,9 @@ Mustache Template Data:
 	args, _ := docopt.Parse(usage, argv, true, "", false)
 	// fmt.Println(args)
 
-	root := args["PATH"].(string)
-	if root == "" {
-		return fmt.Errorf("No PATH specified")
-	}
-
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		return fmt.Errorf("PATH does not exist: %s", root)
+	root, err := getRoot(args, false)
+	if err != nil {
+		return err
 	}
 
 	cwd, err := os.Getwd()
