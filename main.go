@@ -111,6 +111,19 @@ type Ffprobe struct {
 	Format  Tagged
 }
 
+func writeJSON(files Files, jsonFile string) error {
+	jsonBytes, err := json.Marshal(files)
+	if err != nil {
+		return fmt.Errorf("Cannot convert files data to json.\n%s", err.Error())
+	}
+	//os.Stdout.Write(jsonBytes)
+
+	if err = ioutil.WriteFile(jsonFile, jsonBytes, 0644); err != nil {
+		return fmt.Errorf("Cannot write json: %s\n%s", jsonFile, err.Error())
+	}
+	return nil
+}
+
 func ConstructPath(tm time.Time) string {
 	return path.Join(strconv.Itoa(tm.Year()), tm.Format("01-Jan"), tm.Format("2006-01-02"))
 }
@@ -394,20 +407,14 @@ Mustache Template Data:
 	}
 
 	// output json
-	jsonBytes, err := json.Marshal(files)
-	if err != nil {
-		return fmt.Errorf("Cannot convert files data to json.\n%s", err.Error())
-	}
-	//os.Stdout.Write(jsonBytes)
-
 	var jsonFile string
 	if str, ok := args["--json"].(string); ok {
 		jsonFile = str
 	} else {
 		jsonFile = path.Join(outDir, "files.json")
 	}
-	if err = ioutil.WriteFile(jsonFile, jsonBytes, 0644); err != nil {
-		return fmt.Errorf("Cannot write json: %s\n%s", jsonFile, err.Error())
+	if err = writeJSON(files, jsonFile); err != nil {
+		return err
 	}
 
 	// output templates
