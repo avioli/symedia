@@ -330,8 +330,10 @@ func getRoot(args map[string]interface{}, fallbackToCwd bool) (root string, err 
 	}
 
 	if _, err = os.Stat(root); os.IsNotExist(err) {
-		err = fmt.Errorf("PATH does not exist: %s", root)
+		return
 	}
+
+	root, err = filepath.Abs(root)
 	return
 }
 
