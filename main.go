@@ -336,7 +336,7 @@ func main() {
 	if root == "" {
 		fmt.Fprintln(os.Stderr, "No path specified")
 		Usage()
-		os.Exit(2)
+		os.Exit(1)
 	}
 
 	cwd, err := os.Getwd()
