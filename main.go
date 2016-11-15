@@ -38,6 +38,7 @@ var (
 	SkipFile    = errors.New("skip this file")
 	NoPath      = errors.New("no path")
 	UnknownFile = errors.New("unknown file")
+	AppName     string
 )
 
 type FlagType int
@@ -304,12 +305,10 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 	return files, err
 }
 
-func main() {
-	app := path.Base(os.Args[0])
-
-	usage := fmt.Sprint(`Usage: `, app, ` PATH [OUTPUT_DIR]
-       `, app, ` [--template_path FILE] [--template_out FILE] [--json FILE] PATH [OUTPUT_DIR]
-       `, app, ` -h | --help | --version
+func cmdProcess(argv []string) (err error) {
+	usage := fmt.Sprint(`Usage: `, AppName, ` process PATH [OUTPUT_DIR]
+       `, AppName, ` process [--template_path FILE] [--template_out FILE] [--json FILE] PATH [OUTPUT_DIR]
+       `, AppName, ` process -h | --help
 
 Process PATH for images and videos and hard-link them to OUTPUT_DIR.
 At the end, it writes a JSON file with the gathered metadata and parses a Mustache template file.
@@ -321,7 +320,7 @@ Arguments:
   OUTPUT_DIR  an optional output path (Defaults to "output")
 
 Options:
-  -h --help             print this help, then exit
+  -h, --help            print this help, then exit
   --version             print version and build, then exit
   --template_path FILE  define a custom template path (Defaults to "error-template.html" in cwd or with the executable)
   --template_out FILE   define a path for the template output (Defaults to "OUTPUT_DIR/errors.html")
@@ -340,28 +339,21 @@ Mustache Template Data:
               }, ...]
   }
 `)
-	args, _ := docopt.Parse(usage, nil, true, "", false)
-
-	if args["--version"].(bool) {
-		fmt.Printf("Version: %s\nCommit: %s", Version, Build)
-		os.Exit(0)
-	}
+	args, _ := docopt.Parse(usage, argv, true, "", false)
+	// fmt.Println(args)
 
 	root := args["PATH"].(string)
 	if root == "" {
-		fmt.Fprintln(os.Stderr, "No PATH specified")
-		os.Exit(1)
+		return fmt.Errorf("No PATH specified")
 	}
 
 	if _, err := os.Stat(root); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "PATH does not exist: %s\n", root)
-		os.Exit(1)
+		return fmt.Errorf("PATH does not exist: %s", root)
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot get current working directory")
-		os.Exit(1)
+		return fmt.Errorf("Cannot get current working directory")
 	}
 
 	// create outDir
@@ -372,8 +364,7 @@ Mustache Template Data:
 		outDir = path.Join(cwd, "output")
 	}
 	if err = os.MkdirAll(outDir, os.ModePerm); err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot create output directory: %s\n", outDir)
-		os.Exit(1)
+		return fmt.Errorf("Cannot create output directory: %s", outDir)
 	}
 
 	// walk the directory
@@ -392,8 +383,7 @@ Mustache Template Data:
 	// output json
 	jsonBytes, err := json.Marshal(files)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot convert files data to json.\n%s\n", err.Error())
-		os.Exit(1)
+		return fmt.Errorf("Cannot convert files data to json.\n%s", err.Error())
 	}
 	//os.Stdout.Write(jsonBytes)
 
@@ -404,8 +394,7 @@ Mustache Template Data:
 		jsonFile = path.Join(outDir, "files.json")
 	}
 	if err = ioutil.WriteFile(jsonFile, jsonBytes, 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot write json: %s\n%s\n", jsonFile, err.Error())
-		os.Exit(1)
+		return fmt.Errorf("Cannot write json: %s\n%s", jsonFile, err.Error())
 	}
 
 	// output templates
@@ -417,8 +406,7 @@ Mustache Template Data:
 		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 			execDir, err := osext.ExecutableFolder()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Cannot get current executable path.\n%s\n", err.Error())
-				os.Exit(1)
+				return fmt.Errorf("Cannot get current executable path.\n%s", err.Error())
 			}
 			templatePath = path.Join(execDir, "error-template.html")
 		}
@@ -436,7 +424,79 @@ Mustache Template Data:
 	}
 	rendered := mustache.RenderFile(templatePath, data)
 	if err = ioutil.WriteFile(templateOut, []byte(rendered), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Cannot render or write errored files: %s.\n%s\n", templatePath, err.Error())
+		return fmt.Errorf("Cannot render or write errored files: %s.\n%s", templatePath, err.Error())
+	}
+	return
+}
+
+func cmdHelp(argv []string) (err error) {
+	usage := fmt.Sprint(`Usage: `, AppName, ` help [<command>] [<args>...]
+
+Give help for given command
+`)
+	args, _ := docopt.Parse(usage, argv, true, "", false)
+
+	if cmd, ok := args["<command>"].(string); ok {
+		return runCommand(cmd, []string{"--help"})
+	}
+
+	return mainApp([]string{"--help"})
+}
+
+func runCommand(cmd string, args []string) (err error) {
+	argv := make([]string, 1)
+	argv[0] = cmd
+	argv = append(argv, args...)
+
+	switch cmd {
+	case "help":
+		return cmdHelp(argv)
+	case "process":
+		return cmdProcess(argv)
+	}
+
+	return fmt.Errorf("%s is not a valid command. See '%s help'", cmd, AppName)
+}
+
+func mainApp(argv []string) (err error) {
+	usage := fmt.Sprint(`Usage: `, AppName, ` <command> [<args>...]
+       `, AppName, ` -h | --help | --version
+
+Options:
+  -h, --help  print this help, then exit
+  --version   print version and build, then exit
+
+Commands:
+  help <command>  Print help for specific command
+  process         Process a directory for images and videos, while hard-linking them to an output directory.
+
+See '`, AppName, ` help <command>' for more information on a specific command.
+`)
+	args, _ := docopt.Parse(usage, argv, true, "", true)
+
+	if args["--version"].(bool) {
+		fmt.Printf("Version: %s\nCommit: %s", Version, Build)
+		os.Exit(0)
+	}
+
+	// fmt.Println("global arguments:")
+	// fmt.Println(args)
+
+	// fmt.Println("command arguments:")
+	cmd := args["<command>"].(string)
+	cmdArgs := args["<args>"].([]string)
+
+	return runCommand(cmd, cmdArgs)
+}
+
+func init() {
+	AppName = path.Base(os.Args[0])
+}
+
+func main() {
+	err := mainApp(nil)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
