@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/docopt/docopt-go"
 	"github.com/hoisie/mustache"
 	"github.com/rwcarlsen/goexif/exif"
-	flag "github.com/spf13/pflag"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
 	"io/ioutil"
-	// "log"
 	"os"
 	"os/exec"
 	"path"
@@ -38,8 +37,6 @@ var (
 	SkipFile    = errors.New("skip this file")
 	NoPath      = errors.New("no path")
 	UnknownFile = errors.New("unknown file")
-	flagHelp    bool
-	flagVersion bool
 )
 
 type FlagType int
@@ -206,7 +203,6 @@ func ReadImage(fpath string) (newPath string, meta FileMeta, err error) {
 		err = SkipFile
 		return
 	}
-	//log.Println(x)
 
 	var width, height int
 	_width, _err := x.Get(exif.PixelXDimension)
@@ -307,35 +303,57 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 	return files, err
 }
 
-var Usage = func() {
-	fmt.Fprintf(os.Stderr, "usage: %s [options] <path>\n", path.Base(os.Args[0]))
-	flag.PrintDefaults()
-}
-
-func init() {
-	flag.Usage = Usage
-	flag.BoolVarP(&flagHelp, "help", "h", false, "print help and exit")
-	flag.BoolVarP(&flagVersion, "version", "v", false, "print version and exit")
-}
-
 func main() {
-	flag.Parse()
+	app := path.Base(os.Args[0])
 
-	if flagHelp {
-		Usage()
-		os.Exit(0)
-	}
+	usage := fmt.Sprint(`Usage: `, app, ` PATH [OUTPUT_DIR]
+       `, app, ` [--template_path FILE] [--template_out FILE] [--json FILE] PATH [OUTPUT_DIR]
+       `, app, ` -h | --help | --version
 
-	if flagVersion {
+Process PATH for images and videos and hard-link them to OUTPUT_DIR.
+At the end, it writes a JSON file with the gathered metadata and parses a Mustache template file.
+
+!!! ATTENTION !!!: Ensure OUTPUT_DIR is not within the PATH structure.
+
+Arguments:
+  PATH        the path to process
+  OUTPUT_DIR  an optional output path (Defaults to "output")
+
+Options:
+  -h --help             print this help, then exit
+  --version             print version and build, then exit
+  --template_path FILE  define a custom template path (Defaults to "error-template.html" in cwd or with the executable)
+  --template_out FILE   define a path for the template output (Defaults to "OUTPUT_DIR/errors.html")
+  --json FILE           define a path for the JSON output (Defaults to "OUTPUT_DIR/files.json")
+
+Mustache Template Data:
+  { "OutDir" string,
+    "Files": [{ "Origin" string
+                "Link"   string
+                "Flag"   (?|X|.|i|v)
+                "Size"   int64
+                "Name"   string
+                "Ext"    string
+                "Width"  int
+                "Height" int
+              }, ...]
+  }
+`)
+	args, _ := docopt.Parse(usage, nil, true, "", false)
+
+	if args["--version"].(bool) {
 		fmt.Printf("Version: %s\nCommit: %s", Version, Build)
 		os.Exit(0)
 	}
 
-	root := flag.Arg(0)
-	//root = "/Users/avioli/Pictures/Photos Library.photoslibrary/Masters/2016/10/"
+	root := args["PATH"].(string)
 	if root == "" {
-		fmt.Fprintln(os.Stderr, "No path specified")
-		Usage()
+		fmt.Fprintln(os.Stderr, "No PATH specified")
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat(root); os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "PATH does not exist: %s\n", root)
 		os.Exit(1)
 	}
 
@@ -346,16 +364,20 @@ func main() {
 	}
 
 	// create outDir
-	outDir := path.Join(cwd, "output")
+	var outDir string
+	if str, ok := args["OUTPUT_DIR"].(string); ok {
+		outDir = path.Join(cwd, str)
+	} else {
+		outDir = path.Join(cwd, "output")
+	}
 	if err = os.MkdirAll(outDir, os.ModePerm); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot create output directory: %s", outDir)
+		fmt.Fprintf(os.Stderr, "Cannot create output directory: %s\n", outDir)
 		os.Exit(1)
 	}
 
 	// walk the directory
 	files, walkErr := WalkPath(root, outDir)
 	if walkErr != nil {
-		//log.Fatal(err)
 		fmt.Fprintln(os.Stderr, walkErr)
 	}
 
@@ -369,36 +391,51 @@ func main() {
 	// output json
 	jsonBytes, err := json.Marshal(files)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot convert files data to json.\n%s", err.Error())
+		fmt.Fprintf(os.Stderr, "Cannot convert files data to json.\n%s\n", err.Error())
 		os.Exit(1)
 	}
 	//os.Stdout.Write(jsonBytes)
 
-	jsonOut := path.Join(outDir, "files.json")
-	if err = ioutil.WriteFile(jsonOut, jsonBytes, 0644); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot write json: %s\n%s", jsonOut, err.Error())
+	var jsonFile string
+	if str, ok := args["--json"].(string); ok {
+		jsonFile = str
+	} else {
+		jsonFile = path.Join(outDir, "files.json")
+	}
+	if err = ioutil.WriteFile(jsonFile, jsonBytes, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot write json: %s\n%s\n", jsonFile, err.Error())
 		os.Exit(1)
 	}
 
 	// output templates
-	templatePath := path.Join(cwd, "error-template.html")
-	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
-		execDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Cannot get current executable path.\n%s", err.Error())
-			os.Exit(1)
+	var templatePath string
+	if str, ok := args["--template_path"].(string); ok {
+		templatePath = str
+	} else {
+		templatePath = path.Join(cwd, "error-template.html")
+		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+			execDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Cannot get current executable path.\n%s\n", err.Error())
+				os.Exit(1)
+			}
+			templatePath = path.Join(execDir, "error-template.html")
 		}
-		templatePath = path.Join(execDir, "error-template.html")
 	}
 
-	templateOut := path.Join(outDir, "errors.html")
+	var templateOut string
+	if str, ok := args["--template_path"].(string); ok {
+		templateOut = str
+	} else {
+		templateOut = path.Join(outDir, "errors.html")
+	}
 	data := map[string]interface{}{
 		"OutDir": outDir,
 		"Files":  files,
 	}
 	rendered := mustache.RenderFile(templatePath, data)
 	if err = ioutil.WriteFile(templateOut, []byte(rendered), 0644); err != nil {
-		fmt.Fprintln(os.Stderr, "Cannot render or write errored files: %s.\n%s", templatePath, err.Error())
+		fmt.Fprintf(os.Stderr, "Cannot render or write errored files: %s.\n%s\n", templatePath, err.Error())
 		os.Exit(1)
 	}
 }
