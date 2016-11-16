@@ -22,12 +22,12 @@ make install
 
 ```
 # if install, ensure $GOPATH/bin is in your path:
-symedia <path>
+symedia process <path>
 ```
 
 ```
 # if build:
-./symedia <path>
+./symedia process <path>...
 ```
 
 It will create a directory, called `output` and create the structure there.
