@@ -212,3 +212,7 @@ Mustache Template Data:
 	}
 	return
 }
+
+func init() {
+	registerCommand("process", "Process a directory for images and videos, while hard-linking them to an output directory.", cmdProcess)
+}

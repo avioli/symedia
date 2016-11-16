@@ -32,11 +32,14 @@ func runCommand(cmd string, args []string) (err error) {
 	argv[0] = cmd
 	argv = append(argv, args...)
 
-	switch cmd {
-	case "help":
+	if cmd == "help" {
 		return cmdHelp(argv)
-	case "process":
-		return cmdProcess(argv)
+	}
+
+	for _, command := range registeredCommands {
+		if command.Name == cmd {
+			return command.Callback(argv)
+		}
 	}
 
 	return fmt.Errorf("%s is not a valid command. See '%s help'", cmd, AppName)
@@ -51,9 +54,7 @@ Options:
   --version   print version and build, then exit
 
 Commands:
-  help <command>  Print help for specific command
-  process         Process a directory for images and videos, while hard-linking them to an output directory.
-
+`, registeredCommands, `
 See '`, AppName, ` help <command>' for more information on a specific command.
 `)
 	args, _ := docopt.Parse(usage, argv, true, "", true)
@@ -75,6 +76,10 @@ See '`, AppName, ` help <command>' for more information on a specific command.
 
 func init() {
 	AppName = path.Base(os.Args[0])
+
+	if cmd, err := registerCommand("help", "Print help for specific command.", cmdHelp); err == nil {
+		cmd.UsageName = "help <command>"
+	}
 }
 
 func main() {
