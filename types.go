@@ -22,7 +22,14 @@ type Tagged struct {
 	Tags Tags
 }
 
+type Stream struct {
+	CodecType string `json:"codec_type"`
+	Width     int
+	Height    int
+	Tags      Tags
+}
+
 type Ffprobe struct {
-	Streams []Tagged
+	Streams []Stream
 	Format  Tagged
 }

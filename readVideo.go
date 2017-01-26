@@ -42,6 +42,13 @@ func ReadVideo(fpath string) (newPath string, meta FileMeta, err error) {
 		return
 	}
 
+	for _, stream := range probe.Streams {
+		if stream.Width != 0 && stream.Height != 0 && stream.CodecType == "video" {
+			meta.Width = stream.Width
+			meta.Height = stream.Height
+			break
+		}
+	}
 
 	// check QtCreationDate first
 	tm, _err := time.Parse(TzDateLayout, probe.Format.Tags.QtCreationDate)
@@ -65,9 +72,5 @@ func ReadVideo(fpath string) (newPath string, meta FileMeta, err error) {
 	}
 
 	newPath = ConstructPath(tm)
-	meta = FileMeta{
-		Width:  0,
-		Height: 0,
-	}
 	return
 }
