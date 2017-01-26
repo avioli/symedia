@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func ReadVideo(fpath string) (newPath string, meta FileMeta, err error) {
+func ReadVideo(fpath string) (meta FileMeta, err error) {
 	var cmdOut []byte
 
 	cmdName := "ffprobe"
@@ -71,6 +71,6 @@ func ReadVideo(fpath string) (newPath string, meta FileMeta, err error) {
 		return
 	}
 
-	newPath = ConstructPath(tm)
+	meta.Time = tm
 	return
 }

@@ -51,12 +51,14 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 		defer func() { fmt.Printf("%s", file.Flag) }()
 
 		if Img.MatchString(file.Name) {
-			newPath, meta, err = ReadImage(fpath)
+			meta, err = ReadImage(fpath)
+			newPath = ConstructPath(meta.Time)
 			file.Flag = FlagImage
 			file.Width = meta.Width
 			file.Height = meta.Height
 		} else if Vid.MatchString(file.Name) {
-			newPath, meta, err = ReadVideo(fpath)
+			meta, err = ReadVideo(fpath)
+			newPath = ConstructPath(meta.Time)
 			file.Flag = FlagVideo
 			file.Width = meta.Width
 			file.Height = meta.Height

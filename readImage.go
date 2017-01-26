@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func ReadImage(fpath string) (newPath string, meta FileMeta, err error) {
+func ReadImage(fpath string) (meta FileMeta, err error) {
 	f, err := os.Open(fpath)
 	if err != nil {
 		return
@@ -18,7 +18,7 @@ func ReadImage(fpath string) (newPath string, meta FileMeta, err error) {
 
 	defer func() {
 		// alt dimensions
-		if meta.IsZero() {
+		if meta.Width == 0 || meta.Height == 0 {
 			imgConfig, _, _err := image.DecodeConfig(f)
 			if _err == nil {
 				meta.Width = imgConfig.Width
@@ -48,11 +48,11 @@ func ReadImage(fpath string) (newPath string, meta FileMeta, err error) {
 	meta.Height = height
 
 	tm, _err := x.DateTime()
-	if _err != nil {
+	if _err != nil || tm.IsZero() {
 		err = SkipFile
 		return
 	}
 
-	newPath = ConstructPath(tm)
+	meta.Time = tm
 	return
 }
