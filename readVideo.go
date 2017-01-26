@@ -64,6 +64,10 @@ func ReadVideo(fpath string) (meta FileMeta, err error) {
 				}
 			}
 		}
+
+		if _err == nil {
+			tm = tm.In(time.Local)
+		}
 	}
 
 	if _err != nil || tm.IsZero() {
