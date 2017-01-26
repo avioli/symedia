@@ -42,11 +42,9 @@ func ReadVideo(fpath string) (newPath string, meta FileMeta, err error) {
 		return
 	}
 
-	var tm time.Time
-	var _err error
 
 	// check QtCreationDate first
-	tm, _err = time.Parse(TzDateLayout, probe.Format.Tags.QtCreationDate)
+	tm, _err := time.Parse(TzDateLayout, probe.Format.Tags.QtCreationDate)
 	if _err != nil {
 		// check Format's CreationTime second
 		tm, _err = time.Parse(LocalDateLayout, probe.Format.Tags.CreationTime)
