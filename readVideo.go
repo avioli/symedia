@@ -25,11 +25,11 @@ func ReadVideo(fpath string) (newPath string, meta FileMeta, err error) {
 
 	// {
 	// 	"streams": [ {
-	// 		"tags": { "creation_time": "2016-07-18 02:29:36" }
+	// 		"tags": { "creation_time": "2016-07-18T02:29:36.000000Z" }
 	// 	}, ... ],
 	// 	"format": {
 	// 		"tags": {
-	// 			"creation_time": "2016-07-18 02:29:36",
+	// 			"creation_time": "2016-07-18T02:29:36.000000Z",
 	// 			"com.apple.quicktime.creationdate": "2016-07-18T12:29:35+1000"
 	// 		}
 	// 	}
