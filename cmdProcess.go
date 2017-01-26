@@ -50,12 +50,12 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 		defer func() { files = append(files, file) }()
 		defer func() { fmt.Printf("%s", file.Flag) }()
 
-		if Img.MatchString(f.Name()) {
+		if Img.MatchString(file.Name) {
 			newPath, meta, err = ReadImage(fpath)
 			file.Flag = FlagImage
 			file.Width = meta.Width
 			file.Height = meta.Height
-		} else if Vid.MatchString(f.Name()) {
+		} else if Vid.MatchString(file.Name) {
 			newPath, meta, err = ReadVideo(fpath)
 			file.Flag = FlagVideo
 			file.Width = meta.Width
@@ -84,12 +84,17 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 			return err
 		}
 
-		if err = os.Link(fpath, path.Join(linkPath, f.Name())); err != nil && !os.IsExist(err) {
-			file.Flag = FlagError
-			return err
+		err = os.Link(fpath, path.Join(linkPath, file.Name))
+		if err != nil {
+			if os.IsExist(err) {
+				file.Flag = FlagExists
+			} else {
+				file.Flag = FlagError
+				return err
+			}
 		}
 
-		file.Link = path.Join(newPath, f.Name())
+		file.Link = path.Join(newPath, file.Name)
 		return nil
 	}
 

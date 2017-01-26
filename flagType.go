@@ -7,6 +7,7 @@ const (
 	FlagUnknown
 	FlagError
 	FlagSkipped
+	FlagExists
 	FlagImage
 	FlagVideo
 )
@@ -15,6 +16,7 @@ var flagTypeValues = []string{
 	FlagUnknown: "?",
 	FlagError:   "X",
 	FlagSkipped: ".",
+	FlagExists:  "-",
 	FlagImage:   "i",
 	FlagVideo:   "v",
 }
