@@ -65,6 +65,7 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 			file.Width = meta.Width
 			file.Height = meta.Height
 		} else {
+			// NOTE: Unknown
 			return nil
 		}
 
