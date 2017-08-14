@@ -220,11 +220,25 @@ Mustache Template Data:
 	} else {
 		templateOut = path.Join(outDir, "errors.html")
 	}
+
 	data := map[string]interface{}{
 		"OutDir": outDir,
 		"Files":  files,
 	}
-	rendered := mustache.RenderFile(templatePath, data)
+
+	template, err := mustache.ParseFile(templatePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			template, err = mustache.ParseString(errorTemplate)
+			if err != nil {
+				return fmt.Errorf("Cannot parse internal template file.\n%s", err.Error())
+			}
+		} else {
+			return fmt.Errorf("Cannot parse template file: %s.\n%s", templatePath, err.Error())
+		}
+	}
+	rendered := template.Render(data)
+
 	if err = ioutil.WriteFile(templateOut, []byte(rendered), 0644); err != nil {
 		return fmt.Errorf("Cannot render or write errored files: %s.\n%s", templatePath, err.Error())
 	}
