@@ -104,6 +104,18 @@ type File struct {
 // FilesList is an array of File structs
 type FilesList []File
 
+// FileMeta holds the minimum viable metadata for a non-skippable file
+type FileMeta struct {
+	Width  int
+	Height int
+	Time   time.Time
+}
+
+// IsZero determines if FileMeta can be considered empty
+func (meta FileMeta) IsZero() bool {
+	return meta.Width == 0 || meta.Height == 0 || meta.Time.IsZero()
+}
+
 type tags struct {
 	CreationTime   string `json:"creation_time"`
 	QtCreationDate string `json:"com.apple.quicktime.creationdate"`
