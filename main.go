@@ -9,6 +9,52 @@ import (
 
 //go:generate go run scripts/embed-template.go
 
+// FlagType stores the type of entry
+type FlagType int
+
+const (
+	_ FlagType = iota
+	// FlagUnknown if for unknown file type
+	FlagUnknown
+	// FlagError is for an errored file
+	FlagError
+	// FlagSkipped is for a skipped file
+	FlagSkipped
+	// FlagExists is for an file that already has a hardlink
+	FlagExists
+	// FlagImage is for an image file
+	FlagImage
+	// FlagVideo is for a video file
+	FlagVideo
+)
+
+var flagTypeValues = []string{
+	FlagUnknown: "?",
+	FlagError:   "X",
+	FlagSkipped: ".",
+	FlagExists:  "-",
+	FlagImage:   "i",
+	FlagVideo:   "v",
+}
+
+func (t FlagType) String() string {
+	if t <= 0 || int(t) >= len(flagTypeValues) {
+		return ""
+	}
+	return flagTypeValues[t]
+}
+
+// IsLoggable returns true if flags are loggable.
+// Such flags are FlagUnknown, FlagError and FlagSkipped.
+func (t FlagType) IsLoggable() bool {
+	return t == FlagUnknown || t == FlagError || t == FlagSkipped
+}
+
+// MarshalJSON converts a FlagType(int) to a string
+func (t FlagType) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + t.String() + `"`), nil
+}
+
 var (
 	// Version holds the package version
 	Version string
