@@ -112,6 +112,7 @@ func WalkPath(inDir string, outDir string) (Files, error) {
 func cmdProcess(argv []string) (err error) {
 	usage := fmt.Sprint(`Usage: `, AppName, ` process PATH [OUTPUT_DIR]
        `, AppName, ` process [--template_path FILE] [--template_out FILE] [--json FILE] PATH [OUTPUT_DIR]
+       `, AppName, ` process --print_template
        `, AppName, ` process -h | --help
 
 Process PATH for images and videos and hard-link them to OUTPUT_DIR.
@@ -126,9 +127,10 @@ Arguments:
 Options:
   -h, --help            print this help, then exit
   --version             print version and build, then exit
-  --template_path FILE  define a custom template path [Defaults to "error-template.html" in cwd or with the executable]
+  --template_path FILE  define a custom template path [Defaults to "error-template.html" in cwd, or alongside the executable, or an internal template]
   --template_out FILE   define a path for the template output [Defaults to "OUTPUT_DIR/errors.html"]
   --json FILE           define a path for the JSON output [Defaults to "OUTPUT_DIR/files.json"]
+  --print_template      prints the internal template, then exit
 
 Mustache Template Data:
   { "OutDir" string,
@@ -145,6 +147,12 @@ Mustache Template Data:
 `)
 	args, _ := docopt.Parse(usage, argv, true, "", false)
 	// fmt.Println(args)
+
+	if shouldPrintTemplate, ok := args["--print_template"].(bool); ok && shouldPrintTemplate {
+		fmt.Fprintln(os.Stdout, errorTemplate)
+		os.Exit(0)
+		return nil
+	}
 
 	root, err := getRoot(args, false)
 	if err != nil {
