@@ -30,7 +30,7 @@ func ReadImage(fpath string) (meta FileMeta, err error) {
 
 	x, _err := exif.Decode(f)
 	if _err != nil {
-		err = SkipFile
+		err = ErrSkipFile
 		return
 	}
 
@@ -49,7 +49,7 @@ func ReadImage(fpath string) (meta FileMeta, err error) {
 
 	tm, _err := x.DateTime()
 	if _err != nil || tm.IsZero() {
-		err = SkipFile
+		err = ErrSkipFile
 		return
 	}
 
