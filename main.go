@@ -7,6 +7,8 @@ import (
 	"path"
 )
 
+//go:generate go run scripts/embed-template.go
+
 var (
 	Version string
 	Build   string
