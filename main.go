@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/docopt/docopt-go"
 	"os"
 	"path"
+	"sort"
+	"strings"
 )
 
 //go:generate go run scripts/embed-template.go
@@ -70,6 +73,58 @@ const (
 	// tzDateLayout used by video's QtCreationDate
 	tzDateLayout = "2006-01-02T15:04:05-0700"
 )
+
+// CommandFunc type represents a Command Callback
+type CommandFunc func([]string) error
+
+// Command is a registered command struct
+type Command struct {
+	Name        string
+	UsageName   string
+	Description string
+	Callback    CommandFunc
+}
+
+type commands []*Command
+
+var registeredCommands commands
+
+func (cmds commands) String() string {
+	var buffer bytes.Buffer
+	var names []string
+	lines := make(map[string]string)
+	maxLen := 0
+
+	for _, command := range cmds {
+		n := command.UsageName
+		if n == "" {
+			n = command.Name
+		}
+		names = append(names, n)
+		lines[n] = command.Description
+		if len(n) > maxLen {
+			maxLen = len(n)
+		}
+	}
+	sort.Strings(names)
+
+	for _, n := range names {
+		buffer.WriteString(fmt.Sprintf("  %s  %s\n", n+strings.Repeat(" ", maxLen-len(n)), lines[n]))
+	}
+
+	return buffer.String()
+}
+
+func registerCommand(name string, desc string, callback CommandFunc) (*Command, error) {
+	cmd := Command{
+		Name:        name,
+		UsageName:   "",
+		Description: desc,
+		Callback:    callback,
+	}
+	registeredCommands = append(registeredCommands, &cmd)
+	return &cmd, nil
+}
 
 func cmdHelp(argv []string) (err error) {
 	usage := fmt.Sprint(`Usage: `, AppName, ` help [<command>] [<args>...]
