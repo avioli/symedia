@@ -122,7 +122,7 @@ At the end, it writes a JSON file with the gathered metadata and parses a Mustac
 
 Arguments:
   PATH        the path to process
-  OUTPUT_DIR  an optional output path [Defaults to "output"]
+  OUTPUT_DIR  an optional output path [Defaults to "./output"]
 
 Options:
   -h, --help            print this help, then exit
