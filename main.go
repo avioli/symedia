@@ -89,6 +89,42 @@ const (
 	tzDateLayout = "2006-01-02T15:04:05-0700"
 )
 
+// File represents an entry with metadata
+type File struct {
+	Origin string   `json:"origin"`
+	Link   string   `json:"link"`
+	Flag   FlagType `json:"flag"`
+	Size   int64    `json:"size"`
+	Name   string   `json:"name"`
+	Ext    string   `json:"ext"`
+	Width  int      `json:"width"`
+	Height int      `json:"height"`
+}
+
+// FilesList is an array of File structs
+type FilesList []File
+
+type tags struct {
+	CreationTime   string `json:"creation_time"`
+	QtCreationDate string `json:"com.apple.quicktime.creationdate"`
+}
+
+type tagged struct {
+	Tags tags
+}
+
+type stream struct {
+	CodecType string `json:"codec_type"`
+	Width     int
+	Height    int
+	Tags      tags
+}
+
+type ffprobe struct {
+	Streams []stream
+	Format  tagged
+}
+
 // CommandFunc type represents a Command Callback
 type CommandFunc func([]string) error
 
@@ -237,8 +273,8 @@ var (
 )
 
 // WalkPath walks over a given path and processes the found files
-func WalkPath(inDir string, outDir string) (Files, error) {
-	files := make(Files, 0, 100)
+func WalkPath(inDir string, outDir string) (FilesList, error) {
+	files := make(FilesList, 0, 100)
 
 	visit := func(fpath string, f os.FileInfo, _err error) error {
 		if f.IsDir() {
@@ -541,7 +577,7 @@ func ReadVideo(fpath string) (meta FileMeta, err error) {
 
 	dec := json.NewDecoder(strings.NewReader(jsonStream))
 
-	var probe Ffprobe
+	var probe ffprobe
 	if err = dec.Decode(&probe); err != nil && err != io.EOF {
 		return
 	}

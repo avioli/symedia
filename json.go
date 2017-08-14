@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func writeJSON(files Files, jsonFile string) error {
+func writeJSON(files FilesList, jsonFile string) error {
 	jsonBytes, err := json.MarshalIndent(files, "", "\t")
 	if err != nil {
 		return fmt.Errorf("Cannot convert files data to json.\n%s", err.Error())
@@ -20,7 +20,7 @@ func writeJSON(files Files, jsonFile string) error {
 	return nil
 }
 
-func readJSON(jsonFile string) (files Files, err error) {
+func readJSON(jsonFile string) (files FilesList, err error) {
 	inFile, err := os.Open(jsonFile)
 	if err != nil {
 		return
