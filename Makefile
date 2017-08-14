@@ -12,10 +12,10 @@ LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.Build=$(BUILD)"
 
 .DEFAULT_GOAL: ${BINARY}
 
-${BINARY}: ${SOURCES} version
+${BINARY}: ${SOURCES} version error-template.go
 	$(GO) build $(LDFLAGS) -o ${BINARY} ${SOURCEDIR}
 
-${BINARY}_darwin_386: ${SOURCES} version
+${BINARY}_darwin_386: ${SOURCES} version error-template.go
 	env GOOS=darwin GOARCH=386 $(GO) build $(LDFLAGS) -o ${BINARY}_darwin_386 ${SOURCEDIR}
 
 install:
@@ -23,6 +23,9 @@ install:
 
 clean:
 	test -f ${BINARY} && rm ${BINARY}
+
+error-template.go: error-template.html
+	$(GO) generate
 
 32bit: ${BINARY}_darwin_386
 
