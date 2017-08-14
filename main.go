@@ -10,8 +10,11 @@ import (
 //go:generate go run scripts/embed-template.go
 
 var (
+	// Version holds the package version
 	Version string
-	Build   string
+	// Build holds the build git SHA
+	Build string
+	// AppName holds... the app name
 	AppName string
 )
 
