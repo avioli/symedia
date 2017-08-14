@@ -51,14 +51,14 @@ func ReadVideo(fpath string) (meta FileMeta, err error) {
 	}
 
 	// check QtCreationDate first
-	tm, _err := time.Parse(TzDateLayout, probe.Format.Tags.QtCreationDate)
+	tm, _err := time.Parse(tzDateLayout, probe.Format.Tags.QtCreationDate)
 	if _err != nil {
 		// check Format's CreationTime second
-		tm, _err = time.Parse(LocalDateLayout, probe.Format.Tags.CreationTime)
+		tm, _err = time.Parse(localDateLayout, probe.Format.Tags.CreationTime)
 		if _err != nil {
 			// then iterate over the Streams' CreationTimes
 			for _, stream := range probe.Streams {
-				tm, _err = time.Parse(LocalDateLayout, stream.Tags.CreationTime)
+				tm, _err = time.Parse(localDateLayout, stream.Tags.CreationTime)
 				if _err == nil {
 					break
 				}

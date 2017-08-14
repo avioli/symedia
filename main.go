@@ -64,6 +64,13 @@ var (
 	AppName string
 )
 
+const (
+	// localDateLayout used by video's CreationTime
+	localDateLayout = "2006-01-02T15:04:05.000000Z"
+	// tzDateLayout used by video's QtCreationDate
+	tzDateLayout = "2006-01-02T15:04:05-0700"
+)
+
 func cmdHelp(argv []string) (err error) {
 	usage := fmt.Sprint(`Usage: `, AppName, ` help [<command>] [<args>...]
 
