@@ -7,6 +7,11 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/hoisie/mustache"
 	"github.com/kardianos/osext"
+	"github.com/rwcarlsen/goexif/exif"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io/ioutil"
 	"os"
 	"path"
@@ -451,4 +456,53 @@ Mustache Template Data:
 
 func init() {
 	registerCommand("process", "Process a directory for images and videos, while hard-linking them to an output directory.", cmdProcess)
+}
+
+// ReadImage reads file's metadata
+func ReadImage(fpath string) (meta FileMeta, err error) {
+	f, err := os.Open(fpath)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	defer func() {
+		// alt dimensions
+		if meta.Width == 0 || meta.Height == 0 {
+			imgConfig, _, _err := image.DecodeConfig(f)
+			if _err == nil {
+				meta.Width = imgConfig.Width
+				meta.Height = imgConfig.Height
+			}
+		}
+		// TODO: PNGs don't get dimensions
+	}()
+
+	x, _err := exif.Decode(f)
+	if _err != nil {
+		err = ErrSkipFile
+		return
+	}
+
+	var width, height int
+	_width, _err := x.Get(exif.PixelXDimension)
+	if _err == nil {
+		_height, _err := x.Get(exif.PixelYDimension)
+		if _err == nil {
+			width, _ = _width.Int(0)
+			height, _ = _height.Int(0)
+		}
+	}
+
+	meta.Width = width
+	meta.Height = height
+
+	tm, _err := x.DateTime()
+	if _err != nil || tm.IsZero() {
+		err = ErrSkipFile
+		return
+	}
+
+	meta.Time = tm
+	return
 }
