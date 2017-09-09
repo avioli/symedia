@@ -294,6 +294,10 @@ func WalkPath(inDir string, outDir string) (FilesList, error) {
 			// TODO: use filepath.SkipDir if a dir is marked for skipping
 			return nil
 		}
+		if strings.HasPrefix(f.Name(), ".") {
+			// TODO: flag as hidden
+			return nil
+		}
 
 		var newPath string
 		var meta FileMeta
