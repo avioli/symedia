@@ -26,4 +26,4 @@ _testmain.go
 # Symedia
 output/*
 symedia
-symedia_darwin_386
+symedia_*

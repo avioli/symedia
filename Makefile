@@ -18,6 +18,9 @@ ${BINARY}: ${SOURCES} version error-template.go
 ${BINARY}_darwin_386: ${SOURCES} version error-template.go
 	env GOOS=darwin GOARCH=386 $(GO) build $(LDFLAGS) -o ${BINARY}_darwin_386 ${SOURCEDIR}
 
+${BINARY}_linux_386: ${SOURCES} version error-template.go
+	env GOOS=linux GOARCH=386 $(GO) build $(LDFLAGS) -o ${BINARY}_linux_386 ${SOURCEDIR}
+
 install:
 	$(GO) install $(LDFLAGS) ${SOURCEDIR}
 
@@ -27,8 +30,8 @@ clean:
 error-template.go: error-template.html
 	$(GO) generate
 
-32bit: ${BINARY}_darwin_386
+32bit: ${BINARY}_darwin_386 ${BINARY}_linux_386
 
-all: ${BINARY} ${BINARY}_darwin_386
+all: ${BINARY} ${BINARY}_darwin_386 ${BINARY}_linux_386
 
 .PHONY: clean install 32bit
